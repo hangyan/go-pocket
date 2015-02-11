@@ -33,7 +33,16 @@ func doRequest(path string, method string, expectedStatus int, b []byte) (*http.
 		if err != nil {
 			return nil, err
 		}
-		return resp, errors.New(string(c))
+		return resp, errors.New(string(c) + "==>" + resp.Header.Get("X-Error"))
 	}
 	return resp, nil
+}
+
+func contains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+	_, ok := set[item]
+	return ok
 }

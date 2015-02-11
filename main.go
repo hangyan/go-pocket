@@ -8,9 +8,9 @@ import (
 
 const (
 	VERSION      = "0.0.1"
-	POCKET_URL   = "https://getpocket.com/v3"
-	CONSUMER_KEY = "31547-629fbec67e06e4af52cf970b"
-	REDIRECT_URI = "http://yayua.github.io"
+	POCKET_URL   = "https://getpocket.com"
+	CONSUMER_KEY = "37723-f51be1d3abd159ef958ceea6"
+	REDIRECT_URI = "https://github.com/hangyan/Silence"
 )
 
 var (
@@ -27,6 +27,8 @@ func main() {
 
 	app.Commands = []cli.Command{
 		authCommand,
+		addCommand,
+		getCommand,
 	}
 
 	app.Run(os.Args)

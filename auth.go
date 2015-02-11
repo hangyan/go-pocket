@@ -1,14 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
 	"github.com/codegangsta/cli"
+	"github.com/skratchdot/open-golang/open"
+	"os"
 )
 
 type (
 	AuthResp struct {
-		code  string `json:"code"`
-		state string `json:"state"`
+		Code  string `json:"code,omitempty"`
+		State string `json:"state,omitempty"`
+	}
+
+	AccessResp struct {
+		AccessToken string `json:"access_token,omitempty"`
+		Username    string `json:"username,omitempty"`
 	}
 )
 
@@ -19,16 +28,38 @@ var authCommand = cli.Command{
 }
 
 func authAction(c *cli.Context) {
-	resp, err := Auth()
+	resp, err := auth()
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	logger.Info("hehe : %s", resp.code)
+	err = open.Run(POCKET_URL + "/auth/authorize?request_token=" + resp.Code + "&redirect_uri=" + REDIRECT_URI)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Type anything and this will be done => ")
+	_, _ = reader.ReadString('\n')
+	fmt.Println("That's right !You are awesome!")
+	access, err := access(resp.Code)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	cfg := &PocketConfig{
+		ConsumerKey: CONSUMER_KEY,
+		Username:    access.Username,
+		AccessToken: access.AccessToken,
+	}
+
+	if err := saveConfig(cfg); err != nil {
+		logger.Fatal(err)
+	}
 
 }
 
-func Auth() (*AuthResp, error) {
+func auth() (*AuthResp, error) {
 	values := map[string]string{}
 	values["consumer_key"] = CONSUMER_KEY
 	values["redirect_uri"] = REDIRECT_URI
@@ -37,16 +68,36 @@ func Auth() (*AuthResp, error) {
 		return nil, err
 	}
 
-	resp, err := doRequest("/oauth/request", "POST", 200, b)
+	resp, err := doRequest("/v3/oauth/request", "POST", 200, b)
+	if err != nil {
+		return nil, err
+	}
+	var arp *AuthResp
+	if err := json.NewDecoder(resp.Body).Decode(&arp); err != nil {
+		return nil, err
+	}
+
+	return arp, nil
+
+}
+
+func access(code string) (*AccessResp, error) {
+	values := map[string]string{}
+	values["consumer_key"] = CONSUMER_KEY
+	values["code"] = code
+	b, err := json.Marshal(values)
 	if err != nil {
 		return nil, err
 	}
 
-	var ap *AuthResp
-	if err := json.NewDecoder(resp.Body).Decode(&ap); err != nil {
+	resp, err := doRequest("/v3/oauth/authorize", "POST", 200, b)
+	if err != nil {
 		return nil, err
 	}
 
-	return ap, nil
-
+	var access *AccessResp
+	if err := json.NewDecoder(resp.Body).Decode(&access); err != nil {
+		return nil, err
+	}
+	return access, nil
 }
