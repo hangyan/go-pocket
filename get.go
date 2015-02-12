@@ -17,6 +17,7 @@ import (
 
 var (
 	ErrItemNotFound = errors.New("specfied item not found")
+	ErrInvalidIput  = errors.New("invalid input")
 )
 
 var getCommand = cli.Command{
@@ -160,7 +161,7 @@ func printActions(store *map[string]Meta) {
 		} else {
 			err := processActions(strings.TrimSpace(action), store)
 			if err != nil {
-				logger.Fatal(err)
+				fmt.Println(err)
 			}
 
 		}
@@ -171,6 +172,10 @@ func printActions(store *map[string]Meta) {
 func processActions(action string, store *map[string]Meta) error {
 
 	s := strings.Split(action, " ")
+	if len(s) != 2 {
+		return ErrInvalidIput
+	}
+
 	meta, ok := (*store)[s[1]]
 	if !ok {
 		return ErrItemNotFound

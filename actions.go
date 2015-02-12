@@ -38,18 +38,28 @@ func buildGetUrl(actions string) (string, error) {
 
 }
 
-func favorite(meta Meta) error {
-
-	favoriteAction := fmt.Sprintf("[{\"action\":\"favorite\",\"item_id\":\"%s\"}]", meta.Id)
-	request, err := buildGetUrl(favoriteAction)
+func doGetRequest(action string) (bool, error) {
+	request, err := buildGetUrl(action)
 	if err != nil {
-		return err
+		return false, err
 	}
 	resp, err := http.Get(buildUrl(request))
 	if err != nil {
-		return err
+		return false, err
 	}
 	result, err := checkActionResult(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	return result, nil
+
+}
+
+func favorite(meta Meta) error {
+
+	favoriteAction := fmt.Sprintf("[{\"action\":\"favorite\",\"item_id\":\"%s\"}]", meta.Id)
+	result, err := doGetRequest(favoriteAction)
 	if err != nil {
 		return err
 	}
@@ -84,16 +94,8 @@ func checkActionResult(body io.ReadCloser) (bool, error) {
 
 func delete(meta Meta) error {
 	deleteAction := fmt.Sprintf("[{\"action\":\"delete\",\"item_id\":\"%s\"}]", meta.Id)
-	request, err := buildGetUrl(deleteAction)
-	if err != nil {
-		return err
-	}
-	resp, err := http.Get(buildUrl(request))
-	if err != nil {
-		return err
-	}
 
-	result, err := checkActionResult(resp.Body)
+	result, err := doGetRequest(deleteAction)
 	if err != nil {
 		return err
 	}
@@ -105,16 +107,7 @@ func delete(meta Meta) error {
 
 func archive(meta Meta) error {
 	archiveAction := fmt.Sprintf("[{\"action\":\"archive\",\"item_id\":\"%s\"}]", meta.Id)
-	request, err := buildGetUrl(archiveAction)
-	if err != nil {
-		return err
-	}
-	resp, err := http.Get(buildUrl(request))
-	if err != nil {
-		return err
-	}
-
-	result, err := checkActionResult(resp.Body)
+	result, err := doGetRequest(archiveAction)
 	if err != nil {
 		return err
 	}
