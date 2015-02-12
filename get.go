@@ -1,11 +1,22 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
+
 	"github.com/bitly/go-simplejson"
 	"github.com/codegangsta/cli"
-	"strconv"
+	"github.com/wsxiaoys/terminal/color"
+)
+
+var (
+	ErrItemNotFound = errors.New("specfied item not found")
 )
 
 var getCommand = cli.Command{
@@ -15,7 +26,6 @@ var getCommand = cli.Command{
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "count,c",
-			Value: 1,
 			Usage: "only return count number of numbers",
 		},
 		cli.StringFlag{
@@ -34,12 +44,18 @@ var getCommand = cli.Command{
 		},
 		cli.StringFlag{
 			Name:  "mime,m",
+			Value: "",
 			Usage: "only return specified item type : article/video/image",
 		},
 		cli.StringFlag{
 			Name:  "order,o",
 			Value: "newest",
 			Usage: "return item in specified order : newest/oldest/title/site",
+		},
+		cli.StringFlag{
+			Name:  "domain,d",
+			Value: "",
+			Usage: "only return items from a particular domain",
 		},
 	},
 }
@@ -51,11 +67,13 @@ func getAction(c *cli.Context) {
 	}
 
 	count := c.Int("count")
+
 	tag := c.String("tag")
 	state := c.String("state")
 	fav := c.Bool("favorite")
 	contentType := c.String("mime")
 	order := c.String("order")
+	domain := c.String("domain")
 
 	values := map[string]string{}
 	values["consumer_key"] = cfg.ConsumerKey
@@ -68,7 +86,11 @@ func getAction(c *cli.Context) {
 		values["tag"] = tag
 	}
 
-	values["detailType"] = "simple"
+	values["detailType"] = "complete"
+
+	if domain != "" {
+		values["domain"] = domain
+	}
 
 	if contentType != "" {
 		if contains([]string{"image", "article", "video"}, contentType) {
@@ -78,7 +100,7 @@ func getAction(c *cli.Context) {
 		}
 	}
 
-	if state == "unread" || state == "archive" || state == "all" {
+	if contains([]string{"unread", "archive", "all"}, state) {
 		values["state"] = state
 	} else {
 		logger.Fatal("item state args error ,must be one of 'unread/archive/all'")
@@ -106,16 +128,109 @@ func getAction(c *cli.Context) {
 		logger.Fatal(err)
 	}
 
-	// var items *GetResp
-	// if err := json.NewDecoder(resp.Body).Decode(&items); err != nil {
-	//	logger.Fatal(err)
-	//}
-	// printGetItems(items)
-
 	json, err := simplejson.NewFromReader(resp.Body)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	fmt.Println(json)
 
+	store, err := formatItems(json)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	printActions(store)
+
+}
+
+func printActions(store *map[string]Meta) {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		color.Println("@r\nActions:")
+		color.Println("@b[v] view in default browser (eg: v 1)")
+		color.Println("@b[c] view in terminal(need w3m)")
+		color.Println("@b[a] archive")
+		color.Println("@b[f] favorite")
+		color.Println("@b[d] delete")
+		color.Println("@b[q] quit")
+		color.Print("@b====> ")
+		action, _ := reader.ReadString('\n')
+		if strings.Split(strings.TrimSpace(action), " ")[0] == "q" {
+			break
+		} else {
+			err := processActions(strings.TrimSpace(action), store)
+			if err != nil {
+				logger.Fatal(err)
+			}
+
+		}
+	}
+
+}
+
+func processActions(action string, store *map[string]Meta) error {
+
+	s := strings.Split(action, " ")
+	meta, ok := (*store)[s[1]]
+	if !ok {
+		return ErrItemNotFound
+	}
+
+	switch s[0] {
+	case "v":
+		if err := viewInBrowser(meta); err != nil {
+			return err
+		}
+
+	case "a":
+		if err := archive(meta); err != nil {
+			return err
+		} else {
+			fmt.Println("Item archive done.")
+		}
+	case "c":
+		if err := cat(meta); err != nil {
+			return err
+		}
+	case "f":
+		if err := favorite(meta); err != nil {
+			return err
+		} else {
+			fmt.Println("Item favorite done.")
+		}
+	case "d":
+		if err := delete(meta); err != nil {
+			return err
+		} else {
+			fmt.Println("Item delete done.")
+		}
+
+	}
+	return nil
+}
+
+func formatItems(js *simplejson.Json) (*map[string]Meta, error) {
+	result, err := js.Map()
+	if err != nil {
+		return nil, err
+	}
+	listValue := result["list"]
+	items := reflect.ValueOf(listValue).Interface().(map[string]interface{})
+
+	count := 0
+	store := make(map[string]Meta)
+	for key, value := range items {
+		count = count + 1
+		color.Printf("@m[%v]", count)
+		color.Printf("@y[%s]:", key)
+		//fmt.Printf("[%s]:", key)
+		vs := reflect.ValueOf(value).Interface().(map[string]interface{})
+		title := reflect.ValueOf(vs["given_title"]).Interface().(string)
+		url := reflect.ValueOf(vs["given_url"]).Interface().(string)
+		color.Printf("@c[%s] ", title)
+		color.Printf("@g%v\n", url)
+
+		store[strconv.Itoa(count)] = Meta{Url: url, Title: title, Id: key}
+	}
+	return &store, nil
 }
