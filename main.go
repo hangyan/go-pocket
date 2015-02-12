@@ -19,8 +19,8 @@ var (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "silence"
-	app.Usage = "Read your pocket in silence"
+	app.Name = "go-pocket"
+	app.Usage = "use pocket in terminal"
 	app.Version = VERSION
 	app.EnableBashCompletion = true
 	app.Flags = []cli.Flag{}
