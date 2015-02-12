@@ -29,14 +29,15 @@ The authentication will use your default browser to work.
 
 `get` use various filters to retrieve items from pocket and output the result,like:
 
+![](https://raw.github.com/hangyan/silence/master/images/get.png)
 
 
 then you can operate on these items by specify the number (eg:1,2...).
 
 ### add
 
-![](https://raw.github.com/hangyan/silence/master/images/get.png)
 
+![](https://raw.github.com/hangyan/silence/master/images/add.png)
 
 
 ## feedback
