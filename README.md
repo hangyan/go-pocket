@@ -39,4 +39,4 @@ then you can operate on these items by specify the number (eg:1,2...).
 
 
 This project is still under development,any feedback will be welcome.
-Email : [yanhangyhy@gmail.com](yanhangyhy@gmail.com)
+Email : [yanhangyhy@gmail.com](mailto:yanhangyhy@gmail.com)
