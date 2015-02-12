@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+
 	"github.com/codegangsta/cli"
+	"github.com/wsxiaoys/terminal/color"
 )
 
 type Item struct {
@@ -106,9 +107,8 @@ func add(url, title, tags string, cfg *PocketConfig) (*AddResp, error) {
 }
 
 func printAddInfo(item *Item) error {
-	fmt.Printf("ResolvedUrl : %v\n", item.ResolvedUrl)
-	fmt.Printf("Title       : %v\n", item.Title)
-	fmt.Printf("MimeType    : %v\n", item.MimeType)
-	fmt.Printf("Encoding    : %v\n", item.Encoding)
+	color.Printf("@bUrl         : @y%v\n", item.ResolvedUrl)
+	color.Printf("@bTitle       : @y%v\n", item.Title)
+	color.Printf("@bMime        : @y%v;%v\n", item.MimeType, item.Encoding)
 	return nil
 }
