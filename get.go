@@ -115,8 +115,6 @@ func getAction(c *cli.Context) {
 
 	if fav == true {
 		values["favorite"] = "1"
-	} else {
-		values["favorite"] = "0"
 	}
 
 	b, err := json.Marshal(values)
