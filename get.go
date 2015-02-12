@@ -79,6 +79,7 @@ func getAction(c *cli.Context) {
 	values := map[string]string{}
 	values["consumer_key"] = cfg.ConsumerKey
 	values["access_token"] = cfg.AccessToken
+	values["detailType"] = "simple"
 
 	if count > 0 {
 		values["count"] = strconv.Itoa(count)
@@ -86,8 +87,6 @@ func getAction(c *cli.Context) {
 	if tag != "" {
 		values["tag"] = tag
 	}
-
-	values["detailType"] = "complete"
 
 	if domain != "" {
 		values["domain"] = domain

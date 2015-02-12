@@ -1,4 +1,4 @@
-# Silence
+# go-pocket
 
 At first I want to build a native gui client for pocket on linux, I want to use
 golang,but I don't found a suitable GUI/CUI library,So I turned to write this little
@@ -6,7 +6,6 @@ tool.
 
 ## overview
 ![](https://raw.github.com/hangyan/silence/master/images/usage.png)
-
 
 
 
