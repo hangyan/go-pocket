@@ -1,2 +1,6 @@
 # Silence
-read pocket article in terminal 
+operate pocket in terminal
+
+## screenshot
+![](https://raw.github.com/hangyan/silence/master/usage.png)
+
