@@ -18,6 +18,7 @@ import (
 var (
 	ErrItemNotFound = errors.New("specfied item not found")
 	ErrInvalidIput  = errors.New("invalid input")
+	ErrInvalidTags  = errors.New("invalid tags format")
 )
 
 var getCommand = cli.Command{
@@ -150,6 +151,7 @@ func printActions(store *map[string]Meta) {
 		color.Println("@b[a] archive")
 		color.Println("@b[f] favorite")
 		color.Println("@b[d] delete")
+		color.Println("@b[t] tags.set new tags for this item")
 		color.Println("@b[q] quit")
 		color.Print("@b====> ")
 		action, _ := reader.ReadString('\n')
@@ -169,7 +171,7 @@ func printActions(store *map[string]Meta) {
 func processActions(action string, store *map[string]Meta) error {
 
 	s := strings.Split(action, " ")
-	if len(s) != 2 {
+	if len(s) < 2 {
 		return ErrInvalidIput
 	}
 
@@ -188,7 +190,7 @@ func processActions(action string, store *map[string]Meta) error {
 		if err := archive(meta); err != nil {
 			return err
 		} else {
-			fmt.Println("Item archive done.")
+			fmt.Println("Item archived.")
 		}
 	case "c":
 		if err := cat(meta); err != nil {
@@ -198,13 +200,22 @@ func processActions(action string, store *map[string]Meta) error {
 		if err := favorite(meta); err != nil {
 			return err
 		} else {
-			fmt.Println("Item favorite done.")
+			fmt.Println("Item mark as favorite.")
 		}
 	case "d":
 		if err := delete(meta); err != nil {
 			return err
 		} else {
-			fmt.Println("Item delete done.")
+			fmt.Println("Item deleted")
+		}
+	case "t":
+		if len(s) != 3 {
+			return ErrInvalidTags
+		}
+		if err := tags(meta, s[2]); err != nil {
+			return err
+		} else {
+			fmt.Println("Item tags updated.")
 		}
 
 	}

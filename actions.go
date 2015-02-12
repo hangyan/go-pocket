@@ -17,6 +17,7 @@ var (
 	ErrItemArchive  = errors.New("item archive failed")
 	ErrItemFavorite = errors.New("item favorite failed")
 	ErrItemDelete   = errors.New("item delete failed")
+	ErrItemTags     = errors.New("item set tags failed")
 )
 
 func viewInBrowser(meta Meta) error {
@@ -89,6 +90,20 @@ func checkActionResult(body io.ReadCloser) (bool, error) {
 	} else {
 		return false, nil
 	}
+
+}
+
+func tags(meta Meta, tag string) error {
+	tagsAction := fmt.Sprintf("[{\"action\":\"tags_replace\",\"tags\":\"%s\",\"item_id\":\"%s\"}]", tag, meta.Id)
+	result, err := doGetRequest(tagsAction)
+	if err != nil {
+		return err
+	}
+	if !result {
+		return ErrItemTags
+	}
+
+	return nil
 
 }
 
